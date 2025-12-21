@@ -6,13 +6,13 @@ from app.models import Product, Reservation
 from app.db import get_db_session
 
 
-
-router = APIRouter(prefix="/api/v1/reserve",)
+router = APIRouter(prefix="/api/v1",)
 
 
 class ReserveRequest(BaseModel):
     product_id: str
     quantity: int
+    reservation_id: str
 
 
 @router.post("/reserve")
@@ -25,6 +25,7 @@ async def reserve_product(request: ReserveRequest, db: AsyncSession = Depends(ge
             result = await db.execute(
                 select(Product)
                 .where(Product.id == product_id)
+                .with_for_update()
             )
             product = result.scalar_one_or_none()
 
@@ -52,11 +53,7 @@ async def reserve_product(request: ReserveRequest, db: AsyncSession = Depends(ge
             }
 
     except Exception as e:
-        return {
-            "status": "error",
-            "message": "Not enough stock available.",
-            "reservation_id": "98765"
-        }
+        raise HTTPException(status_code=404, detail=str(e))
 
 
 
