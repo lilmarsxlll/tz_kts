@@ -7,18 +7,20 @@ from sqlalchemy.testing.schema import mapped_column
 
 
 class Base(AsyncAttrs,DeclarativeBase):
-    abstract = True
-    created_at: datetime = datetime.now()
-    updated_at: datetime = datetime.now()
+    pass
 
 
 class Reservation(Base):
     __tablename__ = 'reservations'
     id: Mapped[int] = mapped_column(primary_key=True)
     product_id: Mapped[int] = mapped_column(ForeignKey('products.id'))
+    quantity: Mapped[int]
+    reserved_at: Mapped[datetime]
+
 
 
 class Product(Base):
     __tablename__ = 'products'
     id: Mapped[int] = mapped_column(primary_key=True)
     available_quantity: Mapped[int]
+

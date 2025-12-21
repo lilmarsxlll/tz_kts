@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy import select
@@ -11,9 +13,9 @@ router = APIRouter(prefix="/api/v1",)
 
 class ReserveRequest(BaseModel):
     product_id: str
-    quantity: int
     reservation_id: str
-
+    quantity: int
+    timestamp: datetime
 
 @router.post("/reserve")
 async def reserve_product(request: ReserveRequest, db: AsyncSession = Depends(get_db_session)):
@@ -29,6 +31,12 @@ async def reserve_product(request: ReserveRequest, db: AsyncSession = Depends(ge
             )
             product = result.scalar_one_or_none()
 
+            if not product:
+                return {
+                    "status": "error",
+                    "message": "Product not found.",
+                    "reservation_id": reservation_id
+                }
 
             if product.available_quantity < quantity:
                 return {
@@ -41,6 +49,7 @@ async def reserve_product(request: ReserveRequest, db: AsyncSession = Depends(ge
 
             reservation = Reservation(
                 product_id = request.product_id,
+                reservation_id = request.reservation_id,
                 quantity = request.quantity,
             )
             db.add(reservation)
@@ -53,7 +62,14 @@ async def reserve_product(request: ReserveRequest, db: AsyncSession = Depends(ge
             }
 
     except Exception as e:
-        raise HTTPException(status_code=404, detail=str(e))
+        # return {
+        #     'я': 'хуесос'
+        # }
+        return {
+            "status": "error",
+            "message": "Not enough stock available.",
+            "reservation_id": reservation_id
+        }
 
 
 
