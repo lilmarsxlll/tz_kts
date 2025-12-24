@@ -17,6 +17,7 @@ class ReserveRequest(BaseModel):
     quantity: int
     timestamp: datetime
 
+
 @router.post("/reserve")
 async def reserve_product(request: ReserveRequest, db: AsyncSession = Depends(get_db_session)):
     product_id = request.product_id
@@ -53,7 +54,7 @@ async def reserve_product(request: ReserveRequest, db: AsyncSession = Depends(ge
                 quantity = request.quantity,
             )
             db.add(reservation)
-            await db.commit()
+
 
         return {
                 "status": "success",
@@ -71,8 +72,32 @@ async def reserve_product(request: ReserveRequest, db: AsyncSession = Depends(ge
             "reservation_id": reservation_id
         }
 
+@router.delete('/unreserve')
+async def unreserve_product(request: ReserveRequest, db: AsyncSession = Depends(get_db_session)):
+    product_id = request.product_id
+    reservation_id = request.reservation_id
+    quantity = request.quantity
+    try:
+        async with db.begin():
+            result = await db.execute(
+                select(Reservation)
+                .where(Reservation.id == reservation_id)
+                .with_for_update()
+            )
+
+            reservation = result.scalar_one_or_none()
+
+            if not reservation:
+                return {
+                    'there is nothing to delete.'
+                }
+
+            if reservation:
+                await db.delete(reservation)
 
 
-
-
+    except Exception as e:
+        return {
+            'Unknown error': e
+        }
 

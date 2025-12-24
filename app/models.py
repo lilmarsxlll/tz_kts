@@ -12,8 +12,8 @@ class Base(AsyncAttrs,DeclarativeBase):
 
 class Reservation(Base):
     __tablename__ = 'reservations'
-    id: Mapped[int] = mapped_column(primary_key=True)
-    product_id: Mapped[int] = mapped_column(ForeignKey('products.id'))
+    id: Mapped[str] = mapped_column(primary_key=True)
+    product_id: Mapped[str] = mapped_column(ForeignKey('products.id'))
     quantity: Mapped[int]
     reserved_at: Mapped[datetime]
 
@@ -21,6 +21,6 @@ class Reservation(Base):
 
 class Product(Base):
     __tablename__ = 'products'
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[str] = mapped_column(primary_key=True)
     available_quantity: Mapped[int]
 
