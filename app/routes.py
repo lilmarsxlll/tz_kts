@@ -1,21 +1,12 @@
-from datetime import datetime
-
-from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel
+from fastapi import APIRouter, Depends
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.models import Product, Reservation
 from app.db import get_db_session
+from app.schemas import ReserveRequest
 
 
 router = APIRouter(prefix="/api/v1",)
-
-
-class ReserveRequest(BaseModel):
-    product_id: str
-    reservation_id: str
-    quantity: int
-    timestamp: datetime
 
 
 @router.post("/reserve")
@@ -63,20 +54,17 @@ async def reserve_product(request: ReserveRequest, db: AsyncSession = Depends(ge
             }
 
     except Exception as e:
-        # return {
-        #     'я': 'хуесос'
-        # }
         return {
             "status": "error",
             "message": "Not enough stock available.",
-            "reservation_id": reservation_id
+            "reservation_id": reservation_id,
+            'description': str(e)
         }
+
 
 @router.delete('/unreserve')
 async def unreserve_product(request: ReserveRequest, db: AsyncSession = Depends(get_db_session)):
-    product_id = request.product_id
     reservation_id = request.reservation_id
-    quantity = request.quantity
     try:
         async with db.begin():
             result = await db.execute(
@@ -89,7 +77,9 @@ async def unreserve_product(request: ReserveRequest, db: AsyncSession = Depends(
 
             if not reservation:
                 return {
-                    'there is nothing to delete.'
+                    "status": "error",
+                    "message": "There is nothing to delete.",
+                    "reservation_id": reservation_id
                 }
 
             if reservation:
@@ -98,6 +88,9 @@ async def unreserve_product(request: ReserveRequest, db: AsyncSession = Depends(
 
     except Exception as e:
         return {
-            'Unknown error': e
+            "status": "error",
+            "message": "There is nothing to delete.",
+            "reservation_id": reservation_id,
+            'description': str(e)
         }
 

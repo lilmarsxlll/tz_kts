@@ -1,10 +1,15 @@
 import asyncio
+import os
 from typing import AsyncGenerator
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from app.models import Base
+from dotenv import load_dotenv
 
 
-DATABASE_URL = "postgresql+asyncpg://postgres:1234@localhost:5432/postgres"
+load_dotenv()
+
+
+DATABASE_URL = os.getenv("DATABASE_URL")
 
 
 engine = create_async_engine(
@@ -26,7 +31,7 @@ async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
         yield session
 
 
-async def async_main():
+async def init_db():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)
@@ -34,4 +39,4 @@ async def async_main():
 
 
 
-asyncio.run(async_main())
+asyncio.run(init_db())

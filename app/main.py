@@ -1,18 +1,19 @@
 from contextlib import asynccontextmanager
 import uvicorn
 from fastapi import FastAPI
-from app.db import async_main
+from app.db import init_db
 from app.routes import router
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    await async_main()
+    await init_db()
     yield
 
 
 app = FastAPI(lifespan=lifespan)
 app.include_router(router)
+
 
 @app.get("/")
 async def root():
